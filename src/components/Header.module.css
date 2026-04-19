@@ -1,0 +1,245 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background-color: white;
+  border-bottom: 1px solid var(--border-color);
+  height: 80px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0 16px;
+    height: 64px;
+  }
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .leftSection {
+    gap: 12px;
+  }
+}
+
+.headerTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .headerTitle {
+    font-size: 16px;
+  }
+}
+
+.searchContainer {
+  display: flex;
+  align-items: center;
+  background: #f4f7fa;
+  border-radius: 20px;
+  padding: 8px 12px;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+@media (min-width: 769px) {
+  .searchContainer:hover {
+    width: 240px;
+    padding: 8px 16px;
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+/* On mobile, search might stay compact or show a separate UI - keeping it compact for now */
+
+.searchIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+}
+
+.searchIcon {
+  color: var(--text-secondary);
+}
+
+.searchInput {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 0;
+  padding: 0;
+  opacity: 0;
+  font-family: inherit;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin-left: 12px;
+}
+
+@media (min-width: 769px) {
+  .searchContainer:hover .searchInput {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+@media (max-width: 1024px) {
+  .rightSection {
+    gap: 16px;
+  }
+}
+
+.lastUpdate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+@media (max-width: 1024px) {
+  .lastUpdate {
+    display: none;
+  }
+}
+
+.notification {
+  position: relative;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  background: var(--warning);
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-gradient);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .userInfo {
+    display: none;
+  }
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.userRole {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.chevron {
+  color: var(--text-secondary);
+  margin-left: 8px;
+}
+
+@media (max-width: 768px) {
+  .chevron {
+    display: none;
+  }
+}
+
+.profileContainer {
+  position: relative;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  min-width: 150px;
+  z-index: 100;
+  border: 1px solid var(--border-color);
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #df4545;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.dropdownItem:hover {
+  background-color: #fff0f0;
+}

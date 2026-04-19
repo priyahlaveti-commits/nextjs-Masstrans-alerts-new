@@ -1,0 +1,38 @@
+
+.profileContainer {
+  position: relative;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  min-width: 150px;
+  z-index: 100;
+  border: 1px solid var(--border-color);
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #df4545;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.dropdownItem:hover {
+  background-color: #fff0f0;
+}

@@ -1,0 +1,371 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.filterSection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .filterSection {
+    padding: 16px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pageSubtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.selectors {
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@media (max-width: 1024px) {
+  .selectors {
+    gap: 24px;
+  }
+}
+
+.selectorGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.selectorIcon {
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+.selectorLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.selector {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 180px;
+}
+
+@media (max-width: 480px) {
+  .selector {
+    min-width: unset;
+    flex: 1;
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+}
+
+.selector:focus {
+  border-color: #1e5bd8;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(30, 91, 216, 0.1);
+}
+
+/* Deep Dive */
+.deepDiveGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .deepDiveGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mainVisualizationCard {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .mainVisualizationCard {
+    padding: 20px;
+    border-radius: 16px;
+  }
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.iconCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.vizTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.statusNormal {
+  background: rgba(5, 205, 153, 0.1);
+  color: #05cd99;
+}
+
+.statusAlert {
+  background: rgba(238, 93, 80, 0.1);
+  color: #ee5d50;
+}
+
+.vizContent {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.diffContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.diffBarWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.diffLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.barGroup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.barBackground {
+  flex: 1;
+  height: 12px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.barValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 30px;
+}
+
+.diffMetric {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 24px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.metricValue {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.metricLabel {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Info Card */
+.infoCard {
+  background: #f8fafc;
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.infoTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.infoText {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.recommendationBox {
+  margin-top: auto;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+/* Health Board */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 8px;
+}
+
+.boardCount {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.healthGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.miniAlertCard {
+  background: white;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.miniAlertCard:hover {
+  border-color: #1e5bd8;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.miniActive {
+  background: #f0f7ff;
+  border-color: #1e5bd8;
+  box-shadow: 0 4px 12px rgba(30, 91, 216, 0.1);
+}
+
+.miniIcon {
+  width: 40px;
+  height: 40px;
+  background: #f8fafc;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1e5bd8;
+}
+
+.miniActive .miniIcon {
+  background: white;
+}
+
+.miniInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.miniType {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.miniStatus {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.textAlert {
+  color: #ee5d50;
+}
+
+.alertDot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  background: #ee5d50;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(238, 93, 80, 0.6);
+}
