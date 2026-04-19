@@ -48,6 +48,12 @@ export default function AlertsPage() {
   const [error, setError] = useState<string | null>(null);
   
   const [showToast, setShowToast] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
+  
+  // Email Modal States
+  const [showModal, setShowModal] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
 
   // ── 1. Initialization: Fetch Vehicles ───────────────────────────────────────
   useEffect(() => {
@@ -98,8 +104,47 @@ export default function AlertsPage() {
   }, [selectedVehicle, selectedDate, fetchDetails]);
 
   const handleSendEmail = () => {
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+    setShowModal(true);
+  };
+
+  const submitEmail = async () => {
+    if (!emailInput) return;
+    
+    // Split emails by comma or space
+    const emailList = emailInput.split(/[ ,]+/).filter(e => e.includes('@'));
+    if (emailList.length === 0) {
+      alert("Please enter valid email addresses.");
+      return;
+    }
+
+    setEmailLoading(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/alerts/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vehicleNumber: selectedVehicle,
+          date: selectedDate,
+          emails: emailList,
+        }),
+      });
+
+      if (res.ok) {
+        setToastMsg('PDF Report sent successfully!');
+        setShowToast(true);
+        setShowModal(false);
+        setEmailInput('');
+        setTimeout(() => setShowToast(false), 4000);
+      } else {
+        const errData = await res.json();
+        alert(`Failed to send email: ${errData.message || 'Error'}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error while sending email.');
+    } finally {
+      setEmailLoading(false);
+    }
   };
 
   if (initLoading) {
@@ -148,13 +193,6 @@ export default function AlertsPage() {
               className={styles.filterInput}
             />
           </div>
-          <button 
-            className={styles.refreshBtn} 
-            onClick={() => fetchDetails(selectedVehicle, selectedDate)}
-            disabled={loading}
-          >
-            <Filter size={16} /> {loading ? 'Fetching...' : 'Refine'}
-          </button>
         </div>
       </div>
 
@@ -230,7 +268,40 @@ export default function AlertsPage() {
 
       {showToast && (
         <div className={styles.toast}>
-          Data sent to email successfully!
+          {toastMsg}
+        </div>
+      )}
+
+      {/* Email Modal */}
+      {showModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h3 className={styles.modalTitle}>Send Records via Email</h3>
+            <p className={styles.modalSub}>Enter one or more email addresses separated by commas.</p>
+            <textarea
+              className={styles.modalInput}
+              placeholder="example@mail.com, user@masstrans.com"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              rows={3}
+            />
+            <div className={styles.modalActions}>
+              <button 
+                className={styles.cancelBtn} 
+                onClick={() => setShowModal(false)}
+                disabled={emailLoading}
+              >
+                Cancel
+              </button>
+              <button 
+                className={styles.submitBtn} 
+                onClick={submitEmail}
+                disabled={emailLoading || !emailInput}
+              >
+                {emailLoading ? <Loader size={16} className={styles.spinner} /> : 'Send PDF'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

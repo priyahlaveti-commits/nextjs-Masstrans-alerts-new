@@ -41,5 +41,18 @@ export declare class AlertsController {
             description: string;
         }>;
     }>;
+    getBulkAlarmCounts(dto: {
+        vehicleNumber: string;
+        date: string;
+    }): Promise<{
+        typeId: number;
+        name: string;
+        count: number;
+    }[]>;
+    sendEmail(dto: {
+        vehicleNumber: string;
+        date: string;
+        emails: string[];
+    }): Promise<any>;
 }
 export {};

@@ -4,10 +4,14 @@ import React, { useState } from 'react';
 import styles from './Header.module.css';
 import { Search, Bell, ChevronDown, LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useNotifications } from '@/context/NotificationContext';
+import { useRouter } from 'next/navigation';
 
 const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
+  const router = useRouter();
 
   return (
     <header className={styles.header}>
@@ -32,14 +36,30 @@ const Header = () => {
           <span className={styles.liveSubtext}>auto-refresh 30s</span>
         </div>
 
-        <div className={styles.notification}>
+        <div 
+          className={styles.notification} 
+          onClick={() => router.push('/notifications')}
+          title="Notifications"
+        >
           <Bell size={20} />
-          <span className={styles.badge}>1</span>
+          {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
         </div>
 
         <div className={styles.profileContainer}>
           <div className={styles.profile} onClick={() => setDropdownOpen(!dropdownOpen)}>
-            <div className={styles.avatar}>{user?.avatar || '??'}</div>
+            {user?.avatar ? (
+              <img src={user.avatar} alt="Avatar" className={styles.avatarImg} />
+            ) : (
+              <div className={styles.avatarInitials}>
+                {user?.name
+                  ? user.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .toUpperCase()
+                  : '??'}
+              </div>
+            )}
             <div className={styles.userInfo}>
               <span className={styles.userName}>{user?.name || 'Guest User'}</span>
               <span className={styles.userRole}>{user?.role || 'Visitor'}</span>

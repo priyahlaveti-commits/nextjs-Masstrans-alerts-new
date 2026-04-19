@@ -43,6 +43,17 @@ let AlertsController = class AlertsController {
     async getAlarmDetails(dto) {
         return this.alertsService.getAlarmDetails(dto.vehicleNumber, dto.date);
     }
+    async getBulkAlarmCounts(dto) {
+        return this.alertsService.getBulkAlarmCounts(dto.vehicleNumber, dto.date);
+    }
+    async sendEmail(dto) {
+        try {
+            return await this.alertsService.sendAlertsEmail(dto.vehicleNumber, dto.date, dto.emails);
+        }
+        catch (err) {
+            throw new Error(`Email process failed: ${err.message}`);
+        }
+    }
 };
 exports.AlertsController = AlertsController;
 __decorate([
@@ -71,6 +82,20 @@ __decorate([
     __metadata("design:paramtypes", [GetAlarmDetailDto]),
     __metadata("design:returntype", Promise)
 ], AlertsController.prototype, "getAlarmDetails", null);
+__decorate([
+    (0, common_1.Post)('bulk-counts'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AlertsController.prototype, "getBulkAlarmCounts", null);
+__decorate([
+    (0, common_1.Post)('send-email'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AlertsController.prototype, "sendEmail", null);
 exports.AlertsController = AlertsController = __decorate([
     (0, common_1.Controller)('alerts'),
     __metadata("design:paramtypes", [alerts_service_1.AlertsService])

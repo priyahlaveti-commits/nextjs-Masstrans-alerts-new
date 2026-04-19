@@ -10,13 +10,15 @@ exports.AlertsModule = void 0;
 const common_1 = require("@nestjs/common");
 const alerts_service_1 = require("./alerts.service");
 const alerts_controller_1 = require("./alerts.controller");
+const pdf_service_1 = require("./pdf.service");
+const mail_service_1 = require("./mail.service");
 let AlertsModule = class AlertsModule {
 };
 exports.AlertsModule = AlertsModule;
 exports.AlertsModule = AlertsModule = __decorate([
     (0, common_1.Module)({
         controllers: [alerts_controller_1.AlertsController],
-        providers: [alerts_service_1.AlertsService],
+        providers: [alerts_service_1.AlertsService, pdf_service_1.PdfService, mail_service_1.MailService],
     })
 ], AlertsModule);
 //# sourceMappingURL=alerts.module.js.map

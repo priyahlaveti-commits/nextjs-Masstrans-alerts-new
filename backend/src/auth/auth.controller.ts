@@ -18,13 +18,13 @@ export class AuthController {
 
   @Get('mock-google')
   async mockGoogleLogin() {
-    // Demo purpose: Return a dummy user similar to a Google response
+    // Simulated Google response: returning a realistic user object
     const dummyUser = { 
-      userId: 777, 
-      email: 'google-demo@masstrans.com', 
-      name: 'Google User (Demo)', 
-      role: 'User', 
-      avatar: 'GD' 
+      userId: '777', 
+      email: 'priya.laveti@masstrans.com', 
+      name: 'Priya Laveti', 
+      role: 'Administrator', 
+      avatar: '' // Empty so frontend generates initials
     };
     return this.authService.login(dummyUser);
   }

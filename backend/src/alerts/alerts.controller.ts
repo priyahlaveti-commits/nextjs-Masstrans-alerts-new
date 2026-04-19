@@ -61,4 +61,33 @@ export class AlertsController {
       dto.date,
     );
   }
+
+  /**
+   * POST /alerts/bulk-counts
+   * Returns counts for ALL alert types for a given vehicle or ALL vehicles.
+   */
+  @Post('bulk-counts')
+  async getBulkAlarmCounts(@Body() dto: { vehicleNumber: string; date: string }) {
+    return this.alertsService.getBulkAlarmCounts(
+      dto.vehicleNumber,
+      dto.date,
+    );
+  }
+
+  /**
+   * POST /alerts/send-email
+   * Generates a PDF of alerts and sends it to specified emails.
+   */
+  @Post('send-email')
+  async sendEmail(@Body() dto: { vehicleNumber: string; date: string; emails: string[] }) {
+    try {
+      return await this.alertsService.sendAlertsEmail(
+        dto.vehicleNumber,
+        dto.date,
+        dto.emails,
+      );
+    } catch (err: any) {
+      throw new Error(`Email process failed: ${err.message}`);
+    }
+  }
 }

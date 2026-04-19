@@ -27,11 +27,11 @@ let AuthController = class AuthController {
     async googleAuth(req) { }
     async mockGoogleLogin() {
         const dummyUser = {
-            userId: 777,
-            email: 'google-demo@masstrans.com',
-            name: 'Google User (Demo)',
-            role: 'User',
-            avatar: 'GD'
+            userId: '777',
+            email: 'priya.laveti@masstrans.com',
+            name: 'Priya Laveti',
+            role: 'Administrator',
+            avatar: ''
         };
         return this.authService.login(dummyUser);
     }

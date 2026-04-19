@@ -2,21 +2,21 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './page.module.css';
-import { 
-  Calendar, 
-  Car, 
-  VideoOff, 
-  Activity, 
-  EyeOff, 
-  Database, 
-  Zap, 
-  BellRing, 
-  Gauge, 
-  BatteryLow, 
-  FastForward, 
-  MapPin, 
-  PowerOff, 
-  Thermometer, 
+import {
+  Calendar,
+  Car,
+  VideoOff,
+  Activity,
+  EyeOff,
+  Database,
+  Zap,
+  BellRing,
+  Gauge,
+  BatteryLow,
+  FastForward,
+  MapPin,
+  PowerOff,
+  Thermometer,
   Ruler,
   TrendingUp,
   TrendingDown,
@@ -50,22 +50,35 @@ interface AlertCard {
 // ─── Icon resolver ────────────────────────────────────────────────────────────
 
 function getAlarmIcon(name: string) {
-  if (name.includes('Video'))      return <VideoOff size={20} />;
-  if (name.includes('Motion'))     return <Activity size={20} />;
-  if (name.includes('Camera'))     return <EyeOff size={20} />;
-  if (name.includes('storage'))    return <Database size={20} />;
-  if (name.includes('IO'))         return <Zap size={20} />;
-  if (name.includes('Emergency'))  return <BellRing size={20} />;
+  if (name.includes('Video')) return <VideoOff size={20} />;
+  if (name.includes('Motion')) return <Activity size={20} />;
+  if (name.includes('Camera')) return <EyeOff size={20} />;
+  if (name.includes('storage')) return <Database size={20} />;
+  if (name.includes('IO')) return <Zap size={20} />;
+  if (name.includes('Emergency')) return <BellRing size={20} />;
   if (name.includes('High-speed')) return <Gauge size={20} />;
-  if (name.includes('voltage'))    return <BatteryLow size={20} />;
-  if (name.includes('Accel'))      return <FastForward size={20} />;
-  if (name.includes('Geo'))        return <MapPin size={20} />;
-  if (name.includes('shutdown'))   return <PowerOff size={20} />;
-  if (name.includes('Temp'))       return <Thermometer size={20} />;
+  if (name.includes('voltage')) return <BatteryLow size={20} />;
+  if (name.includes('Accel')) return <FastForward size={20} />;
+  if (name.includes('Geo')) return <MapPin size={20} />;
+  if (name.includes('shutdown')) return <PowerOff size={20} />;
+  if (name.includes('Temp')) return <Thermometer size={20} />;
   return <Ruler size={20} />;
 }
 
-// ─── Dashboard ────────────────────────────────────────────────────────────────
+// Default threshold for any alarm not specifically mapped
+const DEFAULT_THRESHOLD = 5;
+
+// Custom thresholds for specific alarms
+const ALARM_THRESHOLDS: Record<string, number> = {
+  "High-speed alarm": 10,
+  "Emergency alarm": 0,    // Triggers Alert even for 1 record
+  "Temperature alarm": 2,
+  "Low voltage alarm": 3,
+};
+
+function getThreshold(name: string): number {
+  return ALARM_THRESHOLDS[name] ?? DEFAULT_THRESHOLD;
+}
 
 export default function Dashboard() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -109,42 +122,50 @@ export default function Dashboard() {
         setAlertCards(cards);
 
         if (vehicleData.length > 0) setSelectedVehicleNumber(vehicleData[0].vehicleNumber);
-        if (alarmData.length > 0)   setSelectedAlarmName(alarmData[0].name);
+        if (alarmData.length > 0) setSelectedAlarmName(alarmData[0].name);
       })
       .catch(() => setBackendError(true));
   }, []);
 
-  // ── 2. Fetch count from backend → external API ───────────────────────────
-  const fetchCount = useCallback(
-    async (vehicleNumber: string, alarmName: string, date: string) => {
-      if (!vehicleNumber || !alarmName || !date) return;
+  // ── 2. Fetch all counts (Bulk) from backend ─────────────────────────────
+  const fetchAllCounts = useCallback(
+    async (vehicleNumber: string, date: string) => {
+      if (!date) return;
       setIsFetching(true);
       try {
-        const res = await fetch('http://127.0.0.1:3001/alerts/count', {
+        const res = await fetch('http://127.0.0.1:3001/alerts/bulk-counts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ vehicleNumber, alarmName, date }),
+          body: JSON.stringify({ vehicleNumber: vehicleNumber === 'All Vehicles' ? 'All' : vehicleNumber, date }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        setLiveCount(data.count);
+        const data: Array<{ typeId: number; name: string; count: number }> = await res.json();
+
         setLastUpdated(new Date());
         setBackendError(false);
+
+        // Update all alert cards with the new counts
         setAlertCards(prev =>
-          prev.map(c =>
-            c.type === alarmName
-              ? { ...c, count: data.count, status: data.count > 0 ? 'Alert' : 'Normal' }
-              : c,
-          ),
+          prev.map(card => {
+            const match = data.find(d => d.typeId === card.typeId);
+            return match
+              ? { ...card, count: match.count, status: match.count > getThreshold(card.type) ? 'Alert' : 'Normal' }
+              : card;
+          }),
         );
-      } catch {
-        setLiveCount(null);
+
+        // Update liveCount for the currently selected deep-dive card
+        const currentActiveMatch = data.find(d => d.name === selectedAlarmName);
+        if (currentActiveMatch) setLiveCount(currentActiveMatch.count);
+
+      } catch (err) {
+        console.error('Fetch all counts failed:', err);
         setBackendError(true);
       } finally {
         setIsFetching(false);
       }
     },
-    [],
+    [selectedAlarmName],
   );
 
   // ── 3. Auto-poll every 30s when date is today ────────────────────────────
@@ -154,20 +175,25 @@ export default function Dashboard() {
     setIsLive(live);
 
     if (pollRef.current) clearInterval(pollRef.current);
-    fetchCount(selectedVehicleNumber, selectedAlarmName, selectedDate);
+    fetchAllCounts(selectedVehicleNumber, selectedDate);
 
-    if (live && selectedVehicleNumber && selectedAlarmName) {
+    if (live && selectedVehicleNumber) {
       pollRef.current = setInterval(
-        () => fetchCount(selectedVehicleNumber, selectedAlarmName, selectedDate),
+        () => fetchAllCounts(selectedVehicleNumber, selectedDate),
         30_000,
       );
     }
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, [selectedVehicleNumber, selectedAlarmName, selectedDate, fetchCount]);
+  }, [selectedVehicleNumber, selectedDate, fetchAllCounts]);
 
   // ── Derived values ────────────────────────────────────────────────────────
   const activeCard = alertCards.find(c => c.type === selectedAlarmName) ?? alertCards[0];
-  const displayCount = liveCount ?? activeCard?.count ?? 0;
+  const displayCount = (selectedAlarmName === activeCard?.type ? liveCount : null) ?? activeCard?.count ?? 0;
+
+  // Update liveCount locally when selectedAlarmName changes, if we already have the data
+  useEffect(() => {
+    if (activeCard) setLiveCount(activeCard.count);
+  }, [selectedAlarmName, activeCard]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -181,7 +207,7 @@ export default function Dashboard() {
           fontSize: 14, fontWeight: 600,
         }}>
           <WifiOff size={16} />
-          Cannot reach backend (localhost:3001). Make sure NestJS is running with <code>npm run start:dev</code> inside the <code>backend/</code> folder.
+          Cannot reach backend (127.0.0.1:3001). Make sure NestJS is running.
         </div>
       )}
 
@@ -197,12 +223,10 @@ export default function Dashboard() {
               onChange={e => setSelectedVehicleNumber(e.target.value)}
               className={styles.selector}
             >
-              {vehicles.length === 0
-                ? <option>Loading…</option>
-                : vehicles.map(v => (
-                    <option key={v.terid} value={v.vehicleNumber}>{v.vehicleNumber}</option>
-                  ))
-              }
+              <option value="All Vehicles">All Vehicles (Aggregated)</option>
+              {vehicles.map(v => (
+                <option key={v.terid} value={v.vehicleNumber}>{v.vehicleNumber}</option>
+              ))}
             </select>
           </div>
 
@@ -251,16 +275,15 @@ export default function Dashboard() {
             <div className={styles.cardHeader}>
               <div
                 className={styles.iconCircle}
-                style={{ background: displayCount > 0 ? '#ee5d50' : '#1e5bd8' }}
+                style={{ background: displayCount > getThreshold(selectedAlarmName) ? '#ee5d50' : '#1e5bd8' }}
               >
                 {activeCard?.icon}
               </div>
               <div>
                 <h3 className={styles.vizTitle}>{selectedAlarmName || 'Select an alarm'}</h3>
-                <span className={`${styles.statusBadge} ${
-                  displayCount > 0 ? styles.statusAlert : styles.statusNormal
-                }`}>
-                  {isFetching ? 'Fetching…' : displayCount > 0 ? 'Alert' : 'Normal'}
+                <span className={`${styles.statusBadge} ${displayCount > getThreshold(selectedAlarmName) ? styles.statusAlert : styles.statusNormal
+                  }`}>
+                  {isFetching ? 'Fetching…' : displayCount > getThreshold(selectedAlarmName) ? 'Alert' : 'Normal'}
                 </span>
               </div>
             </div>
@@ -270,10 +293,10 @@ export default function Dashboard() {
                 <div className={styles.diffBarWrapper}>
                   <div className={styles.diffLabel}>
                     {isFetching
-                      ? <span style={{ display:'flex', alignItems:'center', gap:6 }}>
-                          <Loader size={14} style={{ animation:'spin 1s linear infinite' }} />
-                          Fetching from Masstrans API…
-                        </span>
+                      ? <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Loader size={14} style={{ animation: 'spin 1s linear infinite' }} />
+                        Fetching from Masstrans API…
+                      </span>
                       : `Count for ${selectedDate} — vehicle ${selectedVehicleNumber}`
                     }
                   </div>
@@ -283,7 +306,7 @@ export default function Dashboard() {
                         className={styles.barFill}
                         style={{
                           width: `${Math.min(displayCount * 2, 100)}%`,
-                          background: displayCount > 0 ? '#ee5d50' : '#05cd99',
+                          background: displayCount > getThreshold(selectedAlarmName) ? '#ee5d50' : '#05cd99',
                           transition: 'width 0.6s ease',
                         }}
                       />
@@ -297,13 +320,13 @@ export default function Dashboard() {
 
               <div className={styles.diffMetric}>
                 <div className={styles.metricIcon}>
-                  {displayCount > 0
+                  {displayCount > getThreshold(selectedAlarmName)
                     ? <TrendingUp color="#ee5d50" />
                     : <TrendingDown color="#05cd99" />
                   }
                 </div>
                 <div>
-                  <div className={styles.metricValue} style={{ color: displayCount > 0 ? '#ee5d50' : '#05cd99' }}>
+                  <div className={styles.metricValue} style={{ color: displayCount > getThreshold(selectedAlarmName) ? '#ee5d50' : '#05cd99' }}>
                     {displayCount} alarm{displayCount !== 1 ? 's' : ''}
                   </div>
                   <div className={styles.metricLabel}>recorded on {selectedDate}</div>
@@ -322,7 +345,7 @@ export default function Dashboard() {
             </p>
             <div className={styles.recommendationBox}>
               <strong>System Action:</strong>{' '}
-              {displayCount > 0
+              {displayCount > getThreshold(selectedAlarmName)
                 ? 'Escalated to technical supervisor.'
                 : 'Routine monitoring continuing.'}
             </div>
@@ -339,26 +362,25 @@ export default function Dashboard() {
       {/* ── System Health Board ─────────────────────────────────────────── */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>System Health Board</h2>
+          <h2 className={styles.sectionTitle}>Alarm Events</h2>
           <span className={styles.boardCount}>{alertCards.length} Monitors Active</span>
         </div>
         <div className={styles.healthGrid}>
           {alertCards.map(alert => (
             <div
               key={alert.id}
-              className={`${styles.miniAlertCard} ${
-                selectedAlarmName === alert.type ? styles.miniActive : ''
-              }`}
+              className={`${styles.miniAlertCard} ${selectedAlarmName === alert.type ? styles.miniActive : ''
+                }`}
               onClick={() => setSelectedAlarmName(alert.type)}
             >
               <div className={styles.miniIcon}>{alert.icon}</div>
               <div className={styles.miniInfo}>
                 <span className={styles.miniType}>{alert.type}</span>
-                <span className={`${styles.miniStatus} ${alert.count > 0 ? styles.textAlert : ''}`}>
+                <span className={`${styles.miniStatus} ${alert.count > getThreshold(alert.type) ? styles.textAlert : ''}`}>
                   {selectedAlarmName === alert.type && isFetching ? '…' : alert.count}
                 </span>
               </div>
-              {alert.count > 0 && <div className={styles.alertDot} />}
+              {alert.count > getThreshold(alert.type) && <div className={styles.alertDot} />}
             </div>
           ))}
         </div>
