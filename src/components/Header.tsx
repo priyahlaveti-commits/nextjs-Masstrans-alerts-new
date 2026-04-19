@@ -2,12 +2,13 @@
 
 import React, { useState } from 'react';
 import styles from './Header.module.css';
-import { Search, Bell, Clock, ChevronDown, LogOut } from 'lucide-react';
+import { Search, Bell, ChevronDown, LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
+
   return (
     <header className={styles.header}>
       <div className={styles.leftSection}>
@@ -25,9 +26,10 @@ const Header = () => {
       </div>
 
       <div className={styles.rightSection}>
-        <div className={styles.lastUpdate}>
-          <Clock size={16} />
-          <span>Last update : 20 min ago</span>
+        <div className={styles.liveIndicator}>
+          <span className={styles.liveDot} />
+          <span className={styles.liveText}>LIVE</span>
+          <span className={styles.liveSubtext}>auto-refresh 30s</span>
         </div>
 
         <div className={styles.notification}>
@@ -37,10 +39,10 @@ const Header = () => {
 
         <div className={styles.profileContainer}>
           <div className={styles.profile} onClick={() => setDropdownOpen(!dropdownOpen)}>
-            <div className={styles.avatar}>JC</div>
+            <div className={styles.avatar}>{user?.avatar || '??'}</div>
             <div className={styles.userInfo}>
-              <span className={styles.userName}>John Carter</span>
-              <span className={styles.userRole}>Admin</span>
+              <span className={styles.userName}>{user?.name || 'Guest User'}</span>
+              <span className={styles.userRole}>{user?.role || 'Visitor'}</span>
             </div>
             <ChevronDown size={16} className={styles.chevron} />
           </div>

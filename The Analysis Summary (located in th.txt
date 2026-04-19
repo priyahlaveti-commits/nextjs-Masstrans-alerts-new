@@ -1,0 +1,26 @@
+The Analysis Summary (located in the "Deep Dive" section) is an intelligent comparison engine designed to help you quickly understand if a vehicle's behavior is normal or requires attention.
+
+Here is the logic of how it works:
+
+1. The Core Comparison
+The system takes the selected Alarm Type and compares two primary metrics:
+
+Current Performance: The actual number of alerts recorded for the specific vehicle and date you have selected.
+Healthy Average: A pre-calculated benchmark (baseline) that represents the "normal" number of alerts expected for a healthy vehicle in your fleet.
+2. Deviation Logic
+The system automatically calculates the Deviation (the difference between the current state and the normal average):
+
+🔴 Higher Than Average (Trending Up): If the current alerts exceed the healthy average, a red "Trending Up" icon appears. This flags that the vehicle is experiencing more issues than usual.
+🟢 Lower Than Average (Trending Down): If the current alerts are below the average, a green "Trending Down" icon appears, signifying that the vehicle is performing better than the fleet baseline.
+3. Smart Text Generation
+The Analysis Summary box on the right automatically generates a human-readable report:
+
+It quantifies the exact difference (e.g., "12 units higher").
+It provides a System Action recommendation. For example:
+If the status is Alert, it recommends: "Escalated to technical supervisor."
+If the status is Normal, it says: "Routine monitoring continuing."
+Why is this useful?
+Instead of just looking at raw numbers, this feature immediately tells you "Does this number matter?" by showing you how far it has drifted away from a "Healthy" state.
+
+Would you like me to adjust how these averages are calculated or change the visual indicators?
+

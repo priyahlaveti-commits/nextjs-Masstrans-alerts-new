@@ -96,6 +96,59 @@
   transform: scale(1.02);
 }
 
+.errorMessage {
+  background-color: rgba(255, 118, 117, 0.2);
+  color: white;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 24px 0;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.divider span {
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.googleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  background: white;
+  border: none;
+  border-radius: 12px;
+  color: #1e5bd8;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.googleButton:hover {
+  background-color: #f8f9fa;
+  transform: scale(1.02);
+}
+
 .loginButton:active {
   transform: scale(0.98);
 }
