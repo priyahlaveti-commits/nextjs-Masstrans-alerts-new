@@ -22,6 +22,10 @@ class GetAlarmCountDto {
     alarmName;
     date;
 }
+class GetAlarmDetailDto {
+    vehicleNumber;
+    date;
+}
 let AlertsController = class AlertsController {
     alertsService;
     constructor(alertsService) {
@@ -35,6 +39,9 @@ let AlertsController = class AlertsController {
     }
     async getAlarmCount(dto) {
         return this.alertsService.getAlarmCount(dto.vehicleNumber, dto.alarmName, dto.date);
+    }
+    async getAlarmDetails(dto) {
+        return this.alertsService.getAlarmDetails(dto.vehicleNumber, dto.date);
     }
 };
 exports.AlertsController = AlertsController;
@@ -57,6 +64,13 @@ __decorate([
     __metadata("design:paramtypes", [GetAlarmCountDto]),
     __metadata("design:returntype", Promise)
 ], AlertsController.prototype, "getAlarmCount", null);
+__decorate([
+    (0, common_1.Post)('details'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [GetAlarmDetailDto]),
+    __metadata("design:returntype", Promise)
+], AlertsController.prototype, "getAlarmDetails", null);
 exports.AlertsController = AlertsController = __decorate([
     (0, common_1.Controller)('alerts'),
     __metadata("design:paramtypes", [alerts_service_1.AlertsService])

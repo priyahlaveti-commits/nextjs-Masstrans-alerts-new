@@ -1,38 +1,129 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styles from './alerts.module.css';
-import { Filter, Calendar, Car, Mail } from 'lucide-react';
+import { Filter, Calendar, Car, Mail, Loader, MapPin, AlertCircle } from 'lucide-react';
 
-// Mock Data
-const MOCK_VEHICLES = ['AP 01 BB 5856', 'TS 09 CC 1234', 'MH 12 DD 5678'];
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-const MOCK_ALERT_RECORDS = [
-  { id: 1, time: '10:23 AM', type: 'Overspeeding', severity: 'High', location: 'Mayapuri, Delhi', speed: '85 km/h' },
-  { id: 2, time: '11:45 AM', type: 'Harsh Braking', severity: 'Medium', location: 'Connaught Place, Delhi', speed: '40 km/h' },
-  { id: 3, time: '01:15 PM', type: 'Route Deviation', severity: 'Low', location: ' द्वारका, Delhi', speed: '50 km/h' },
-  { id: 4, time: '02:30 PM', type: 'Idling', severity: 'Medium', location: 'Gurugram', speed: '0 km/h' },
-  { id: 5, time: '04:00 PM', type: 'Overspeeding', severity: 'High', location: 'Noida Expr', speed: '92 km/h' },
-];
+interface Vehicle {
+  terid: string;
+  vehicleNumber: string;
+}
+
+interface AlarmType {
+  typeId: number;
+  name: string;
+}
+
+interface AlertRecord {
+  sNo: number;
+  time: string;
+  alertType: string;
+  alertTypeId: number;
+  speed: number;
+  latitude: string;
+  longitude: string;
+  direction: number;
+  description: string;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const BACKEND_URL = 'http://127.0.0.1:3001';
 
 export default function AlertsPage() {
-  const [selectedVehicle, setSelectedVehicle] = useState('AP 01 BB 5856');
-  const [selectedDate, setSelectedDate] = useState('2023-10-24');
+  // Filter States
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [selectedDate, setSelectedDate] = useState(() =>
+    new Date().toISOString().split('T')[0]
+  );
+
+  // Data States
+  const [records, setRecords] = useState<AlertRecord[]>([]);
+  const [totalAlerts, setTotalAlerts] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [initLoading, setInitLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const [showToast, setShowToast] = useState(false);
 
+  // ── 1. Initialization: Fetch Vehicles ───────────────────────────────────────
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/alerts/vehicles`)
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch vehicles');
+        return res.json();
+      })
+      .then((data: Vehicle[]) => {
+        setVehicles(data);
+        if (data.length > 0) setSelectedVehicle(data[0].vehicleNumber);
+      })
+      .catch(err => {
+        console.error(err);
+        setError('Backend integration error. Ensure NestJS is running.');
+      })
+      .finally(() => setInitLoading(false));
+  }, []);
+
+  // ── 2. Data Fetching: Alert Details ────────────────────────────────────────
+  const fetchDetails = useCallback(async (vNum: string, date: string) => {
+    if (!vNum || !date) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${BACKEND_URL}/alerts/details`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vehicleNumber: vNum, date }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setRecords(data.alerts || []);
+      setTotalAlerts(data.totalAlerts || 0);
+    } catch (err) {
+      console.error(err);
+      setError('Could not fetch alert records.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch when filters change
+  useEffect(() => {
+    if (selectedVehicle) {
+      fetchDetails(selectedVehicle, selectedDate);
+    }
+  }, [selectedVehicle, selectedDate, fetchDetails]);
+
   const handleSendEmail = () => {
-    // Mock sending email
     setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-    }, 3000);
+    setTimeout(() => setShowToast(false), 3000);
   };
+
+  if (initLoading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <Loader size={48} className={styles.spinner} />
+        <p>Loading application data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
       {/* Filters Section */}
       <div className={styles.filterSection}>
-        <h1 className={styles.pageTitle}>Vehicle Wise Alerts</h1>
+        <div className={styles.titleGroup}>
+          <h1 className={styles.pageTitle}>Vehicle Wise Alerts</h1>
+          {error && (
+            <div className={styles.errorBanner}>
+              <AlertCircle size={16} /> {error}
+            </div>
+          )}
+        </div>
+        
         <div className={styles.filters}>
           <div className={styles.filterGroup}>
             <Car size={18} className={styles.filterIcon} />
@@ -41,7 +132,11 @@ export default function AlertsPage() {
               onChange={(e) => setSelectedVehicle(e.target.value)}
               className={styles.filterSelect}
             >
-              {MOCK_VEHICLES.map(v => <option key={v} value={v}>{v}</option>)}
+              {vehicles.map(v => (
+                <option key={v.terid} value={v.vehicleNumber}>
+                  {v.vehicleNumber}
+                </option>
+              ))}
             </select>
           </div>
           <div className={styles.filterGroup}>
@@ -53,12 +148,21 @@ export default function AlertsPage() {
               className={styles.filterInput}
             />
           </div>
-          {/* Filter button removed */}
+          <button 
+            className={styles.refreshBtn} 
+            onClick={() => fetchDetails(selectedVehicle, selectedDate)}
+            disabled={loading}
+          >
+            <Filter size={16} /> {loading ? 'Fetching...' : 'Refine'}
+          </button>
         </div>
       </div>
 
       <div className={styles.actionSection}>
-        <button className={styles.emailBtn} onClick={handleSendEmail}>
+        <div className={styles.statsSummary}>
+          Showing <strong>{records.length}</strong> alerts for vehicle <strong>{selectedVehicle}</strong>
+        </div>
+        <button className={styles.emailBtn} onClick={handleSendEmail} disabled={records.length === 0}>
           <Mail size={16} /> Send Email
         </button>
       </div>
@@ -68,35 +172,59 @@ export default function AlertsPage() {
         <div className={styles.tableCard}>
           <div className={styles.tableHeader}>
             <span>Alert Records for {selectedVehicle} ({selectedDate})</span>
+            {loading && <Loader size={16} className={styles.spinner} />}
           </div>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Alert Type</th>
-                <th>Severity</th>
-                <th>Location</th>
-                <th>Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              {MOCK_ALERT_RECORDS.map((record) => (
-                <tr key={record.id}>
-                  <td>{record.time}</td>
-                  <td className={styles.boldText}>{record.type}</td>
-                  <td>
-                    <span className={`${styles.badge} ${styles['badge' + record.severity]}`}>
-                      {record.severity}
-                    </span>
-                  </td>
-                  <td className={styles.locationCell}>
-                    {record.location}
-                  </td>
-                  <td className={styles.lightText}>{record.speed}</td>
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th style={{ width: '60px' }}>S.No</th>
+                  <th>Time</th>
+                  <th>Alert Type</th>
+                  <th>Speed</th>
+                  <th>Location</th>
+                  <th>Direction</th>
+                  <th>Description</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {records.length > 0 ? (
+                  records.map((record) => (
+                    <tr key={`${record.sNo}-${record.time}`}>
+                      <td className={styles.sNoCell}>{record.sNo}</td>
+                      <td className={styles.timeCell}>{new Date(record.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
+                      <td className={styles.boldText}>
+                        <span className={styles.typeTag}>{record.alertType}</span>
+                      </td>
+                      <td className={styles.speedCell}>
+                        <span className={record.speed > 80 ? styles.highSpeed : ''}>
+                          {record.speed} km/h
+                        </span>
+                      </td>
+                      <td className={styles.locationCell}>
+                        <a 
+                          href={`https://www.google.com/maps?q=${record.latitude},${record.longitude}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className={styles.mapLink}
+                        >
+                          <MapPin size={14} /> {record.latitude}, {record.longitude}
+                        </a>
+                      </td>
+                      <td>{record.direction}°</td>
+                      <td className={styles.descriptionCell}>{record.description}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className={styles.emptyCell}>
+                      {loading ? 'Fetching alert data...' : 'No alerts recorded for this selection.'}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

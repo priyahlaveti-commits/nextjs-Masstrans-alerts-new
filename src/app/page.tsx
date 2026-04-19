@@ -86,8 +86,8 @@ export default function Dashboard() {
   // ── 1. Load vehicle list + alarm types on mount ──────────────────────────
   useEffect(() => {
     Promise.all([
-      fetch('http://localhost:3001/alerts/vehicles'),
-      fetch('http://localhost:3001/alerts/alarm-types'),
+      fetch('http://127.0.0.1:3001/alerts/vehicles'),
+      fetch('http://127.0.0.1:3001/alerts/alarm-types'),
     ])
       .then(async ([vRes, aRes]) => {
         if (!vRes.ok || !aRes.ok) throw new Error('Backend not ready');
@@ -120,7 +120,7 @@ export default function Dashboard() {
       if (!vehicleNumber || !alarmName || !date) return;
       setIsFetching(true);
       try {
-        const res = await fetch('http://localhost:3001/alerts/count', {
+        const res = await fetch('http://127.0.0.1:3001/alerts/count', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ vehicleNumber, alarmName, date }),

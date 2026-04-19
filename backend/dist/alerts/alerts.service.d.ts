@@ -5,4 +5,20 @@ export declare class AlertsService {
         date: string;
         alarmName: string;
     }>;
+    getAlarmDetails(vehicleNumber: string, date: string): Promise<{
+        vehicleNumber: string;
+        date: string;
+        totalAlerts: number;
+        alerts: Array<{
+            sNo: number;
+            time: string;
+            alertType: string;
+            alertTypeId: number;
+            speed: number;
+            latitude: string;
+            longitude: string;
+            direction: number;
+            description: string;
+        }>;
+    }>;
 }

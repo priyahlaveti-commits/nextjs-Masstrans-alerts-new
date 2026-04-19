@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const response = await fetch('http://localhost:3001/auth/profile', {
+          const response = await fetch('http://127.0.0.1:3001/auth/profile', {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, pass: string) => {
     setError(null);
     try {
-      const response = await fetch('http://localhost:3001/auth/login', {
+      const response = await fetch('http://127.0.0.1:3001/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const googleLogin = async () => {
     // For demo purposes, we hit the mock-google endpoint
     try {
-      const response = await fetch('http://localhost:3001/auth/mock-google');
+      const response = await fetch('http://127.0.0.1:3001/auth/mock-google');
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('token', data.access_token);

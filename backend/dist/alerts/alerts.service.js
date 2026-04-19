@@ -10,8 +10,9 @@ exports.AlertsService = void 0;
 const common_1 = require("@nestjs/common");
 const alarms_config_1 = require("../config/alarms.config");
 const vehicles_config_1 = require("../config/vehicles.config");
-const MASSTRANS_API_URL = 'http://52.66.177.17:12056/api/v1/basic/alarm/count';
+const MASSTRANS_API_BASE = 'http://52.66.177.17:12056/api/v1/basic/alarm';
 const MASSTRANS_API_KEY = 'ytU2t%2FveJMrA3lyyuFfttL6rf1DUBjRPZjkeTSTNX3mg0DrdI9PhUJFysOUzfMJjwtSvS7K7y8c1sO0%3D';
+const DETAIL_ALARM_TYPES = Object.keys(alarms_config_1.ALARM_TYPES).map(Number);
 let AlertsService = class AlertsService {
     async getAlarmCount(vehicleNumber, alarmName, date) {
         const terid = (0, vehicles_config_1.getTerIdByVehicle)(vehicleNumber);
@@ -31,7 +32,7 @@ let AlertsService = class AlertsService {
             starttime,
             endtime,
         };
-        const response = await fetch(MASSTRANS_API_URL, {
+        const response = await fetch(`${MASSTRANS_API_BASE}/count`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
@@ -43,6 +44,50 @@ let AlertsService = class AlertsService {
         const record = json?.data?.[0];
         const count = record?.count ?? 0;
         return { count, terid, date, alarmName };
+    }
+    async getAlarmDetails(vehicleNumber, date) {
+        const terid = (0, vehicles_config_1.getTerIdByVehicle)(vehicleNumber);
+        if (!terid) {
+            throw new Error(`No terid found for vehicle: ${vehicleNumber}`);
+        }
+        const starttime = `${date} 00:00:00`;
+        const endtime = `${date} 23:00:00`;
+        const body = {
+            key: MASSTRANS_API_KEY,
+            terid: [terid],
+            type: DETAIL_ALARM_TYPES,
+            starttime,
+            endtime,
+        };
+        const response = await fetch(`${MASSTRANS_API_BASE}/detail`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        if (!response.ok) {
+            throw new Error(`Masstrans API error: ${response.status}`);
+        }
+        const json = await response.json();
+        if (json.errorcode !== 200 || !Array.isArray(json.data)) {
+            return { vehicleNumber, date, totalAlerts: 0, alerts: [] };
+        }
+        const alerts = json.data.map((item, index) => ({
+            sNo: index + 1,
+            time: item.gpstime || item.time || '',
+            alertType: alarms_config_1.ALARM_TYPES[item.type] || `Unknown (${item.type})`,
+            alertTypeId: item.type,
+            speed: item.speed ?? 0,
+            latitude: item.gpslat || '',
+            longitude: item.gpslng || '',
+            direction: item.direction ?? 0,
+            description: item.content || '',
+        }));
+        return {
+            vehicleNumber,
+            date,
+            totalAlerts: alerts.length,
+            alerts,
+        };
     }
 };
 exports.AlertsService = AlertsService;

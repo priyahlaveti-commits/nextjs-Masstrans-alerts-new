@@ -9,6 +9,11 @@ class GetAlarmCountDto {
   date: string; // YYYY-MM-DD
 }
 
+class GetAlarmDetailDto {
+  vehicleNumber: string;
+  date: string; // YYYY-MM-DD
+}
+
 @Controller('alerts')
 export class AlertsController {
   constructor(private readonly alertsService: AlertsService) {}
@@ -40,6 +45,19 @@ export class AlertsController {
     return this.alertsService.getAlarmCount(
       dto.vehicleNumber,
       dto.alarmName,
+      dto.date,
+    );
+  }
+
+  /**
+   * POST /alerts/details
+   * Fetches detailed alarm records from Masstrans API for a given vehicle and date.
+   * Returns all alert types (High-speed, Low voltage, etc.) in one response.
+   */
+  @Post('details')
+  async getAlarmDetails(@Body() dto: GetAlarmDetailDto) {
+    return this.alertsService.getAlarmDetails(
+      dto.vehicleNumber,
       dto.date,
     );
   }
