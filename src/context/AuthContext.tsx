@@ -3,19 +3,23 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
-interface User {
-  email: string;
-  name: string;
-  role: string;
-  avatar: string;
+export interface AuthUser {
+  id: number;
+  userTypeId: number;
+  userName: string | null;
+  firstName: string;
+  active: boolean;
+  mobile?: string;
 }
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: User | null;
-  login: (email: string, pass: string) => Promise<void>;
-  googleLogin: () => void;
-  logout: () => void;
+  user: AuthUser | null;
+  token: string | null;
+  sendOtp: (mobile: string) => Promise<void>;
+  verifyOtp: (mobile: string, otp: string) => Promise<void>;
+  resendOtp: (mobile: string) => Promise<void>;
+  logout: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
@@ -23,99 +27,116 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   user: null,
-  login: async () => {},
-  googleLogin: () => {},
-  logout: () => {},
+  token: null,
+  sendOtp: async () => {},
+  verifyOtp: async () => {},
+  resendOtp: async () => {},
+  logout: async () => {},
   isLoading: true,
   error: null,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const response = await fetch('http://127.0.0.1:3001/auth/profile', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-            setIsAuthenticated(true);
-          } else {
-            localStorage.removeItem('token');
-          }
-        } catch (err) {
-          console.error("Auth check failed", err);
-        }
+    const storedToken = localStorage.getItem('auth_token');
+    const storedUser = localStorage.getItem('auth_user');
+    if (storedToken && storedUser) {
+      try {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      } catch {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
       }
-      setIsLoading(false);
-    };
-    checkAuth();
+    }
+    setIsLoading(false);
   }, []);
 
-  const login = async (email: string, pass: string) => {
+  const sendOtp = async (mobile: string) => {
     setError(null);
+    const res = await fetch('/api/auth/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mobile }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.status) {
+      throw new Error(data.error || 'Failed to send OTP');
+    }
+  };
+
+  const verifyOtp = async (mobile: string, otp: string) => {
+    setError(null);
+    const res = await fetch('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mobile, otp: Number(otp), deviceId: 'web' }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.status) {
+      throw new Error(data.error || 'Invalid OTP');
+    }
+    if (data.token) {
+      localStorage.setItem('auth_token', data.token);
+      setToken(data.token);
+    }
+    if (data.user) {
+      const userWithMobile = { ...data.user, mobile };
+      localStorage.setItem('auth_user', JSON.stringify(userWithMobile));
+      setUser(userWithMobile);
+    }
+    router.push('/');
+  };
+
+  const resendOtp = async (mobile: string) => {
+    setError(null);
+    const res = await fetch('/api/auth/resend-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mobile }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.status) {
+      throw new Error(data.error || 'Failed to resend OTP');
+    }
+  };
+
+  const logout = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:3001/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password: pass }),
+      await fetch('/api/auth/logout', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.access_token);
-        setUser(data.user);
-        setIsAuthenticated(true);
-        router.push('/');
-      } else {
-        const errData = await response.json();
-        setError(errData.message || 'Login failed');
-        throw new Error(errData.message || 'Login failed');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Network error');
-      throw err;
+    } catch {
+      // best-effort
+    } finally {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+      setToken(null);
+      setUser(null);
+      router.push('/login');
     }
-  };
-
-  const googleLogin = async () => {
-    // For demo purposes, we hit the mock-google endpoint
-    try {
-      const response = await fetch('http://127.0.0.1:3001/auth/mock-google');
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.access_token);
-        setUser(data.user);
-        setIsAuthenticated(true);
-        router.push('/');
-      }
-    } catch (err) {
-      console.error("Mock Google Login failed", err);
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    setIsAuthenticated(false);
-    setUser(null);
-    router.push('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, googleLogin, logout, isLoading, error }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated: !!user,
+        user,
+        token,
+        sendOtp,
+        verifyOtp,
+        resendOtp,
+        logout,
+        isLoading,
+        error,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

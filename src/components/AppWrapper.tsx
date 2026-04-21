@@ -24,7 +24,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     const checkAlerts = async () => {
       try {
         const today = new Date().toISOString().split('T')[0];
-        const res = await fetch('http://127.0.0.1:3001/alerts/bulk-counts', {
+        const res = await fetch('/api/alerts/bulk-counts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ vehicleNumber: 'All', date: today }),

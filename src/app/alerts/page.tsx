@@ -30,7 +30,7 @@ interface AlertRecord {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const BACKEND_URL = 'http://127.0.0.1:3001';
+// API endpoints are now on the same Next.js server
 
 export default function AlertsPage() {
   // Filter States
@@ -57,7 +57,7 @@ export default function AlertsPage() {
 
   // ── 1. Initialization: Fetch Vehicles ───────────────────────────────────────
   useEffect(() => {
-    fetch(`${BACKEND_URL}/alerts/vehicles`)
+    fetch('/api/alerts/vehicles')
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch vehicles');
         return res.json();
@@ -68,7 +68,7 @@ export default function AlertsPage() {
       })
       .catch(err => {
         console.error(err);
-        setError('Backend integration error. Ensure NestJS is running.');
+        setError('API error. Make sure the Next.js server is running.');
       })
       .finally(() => setInitLoading(false));
   }, []);
@@ -79,7 +79,7 @@ export default function AlertsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${BACKEND_URL}/alerts/details`, {
+      const res = await fetch('/api/alerts/details', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ vehicleNumber: vNum, date }),
@@ -119,7 +119,7 @@ export default function AlertsPage() {
 
     setEmailLoading(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/alerts/send-email`, {
+      const res = await fetch('/api/alerts/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -136,12 +136,16 @@ export default function AlertsPage() {
         setEmailInput('');
         setTimeout(() => setShowToast(false), 4000);
       } else {
-        const errData = await res.json();
-        alert(`Failed to send email: ${errData.message || 'Error'}`);
+        let errMsg = `Server error (${res.status})`;
+        try {
+          const errData = await res.json();
+          errMsg = errData.error || errMsg;
+        } catch {}
+        alert(`Failed to send email: ${errMsg}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Network error while sending email.');
+      alert(`Failed to send email: ${err.message || 'Network error'}`);
     } finally {
       setEmailLoading(false);
     }

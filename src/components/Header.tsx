@@ -47,22 +47,20 @@ const Header = () => {
 
         <div className={styles.profileContainer}>
           <div className={styles.profile} onClick={() => setDropdownOpen(!dropdownOpen)}>
-            {user?.avatar ? (
-              <img src={user.avatar} alt="Avatar" className={styles.avatarImg} />
-            ) : (
-              <div className={styles.avatarInitials}>
-                {user?.name
-                  ? user.name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')
-                      .toUpperCase()
+            <div className={styles.avatarInitials}>
+              {user?.firstName
+                ? user.firstName.slice(0, 2).toUpperCase()
+                : user?.userName
+                  ? user.userName.slice(0, 2).toUpperCase()
                   : '??'}
-              </div>
-            )}
+            </div>
             <div className={styles.userInfo}>
-              <span className={styles.userName}>{user?.name || 'Guest User'}</span>
-              <span className={styles.userRole}>{user?.role || 'Visitor'}</span>
+              <span className={styles.userName}>
+                {user?.firstName || user?.userName || 'Guest User'}
+              </span>
+              {user?.mobile && (
+                <span className={styles.userRole}>{user.mobile}</span>
+              )}
             </div>
             <ChevronDown size={16} className={styles.chevron} />
           </div>

@@ -99,11 +99,11 @@ export default function Dashboard() {
   // ── 1. Load vehicle list + alarm types on mount ──────────────────────────
   useEffect(() => {
     Promise.all([
-      fetch('http://127.0.0.1:3001/alerts/vehicles'),
-      fetch('http://127.0.0.1:3001/alerts/alarm-types'),
+      fetch('/api/alerts/vehicles'),
+      fetch('/api/alerts/alarm-types'),
     ])
       .then(async ([vRes, aRes]) => {
-        if (!vRes.ok || !aRes.ok) throw new Error('Backend not ready');
+        if (!vRes.ok || !aRes.ok) throw new Error('API not ready');
         const vehicleData: Vehicle[] = await vRes.json();
         const alarmData: AlarmType[] = await aRes.json();
 
@@ -133,7 +133,7 @@ export default function Dashboard() {
       if (!date) return;
       setIsFetching(true);
       try {
-        const res = await fetch('http://127.0.0.1:3001/alerts/bulk-counts', {
+        const res = await fetch('/api/alerts/bulk-counts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ vehicleNumber: vehicleNumber === 'All Vehicles' ? 'All' : vehicleNumber, date }),
@@ -207,7 +207,7 @@ export default function Dashboard() {
           fontSize: 14, fontWeight: 600,
         }}>
           <WifiOff size={16} />
-          Cannot reach backend (127.0.0.1:3001). Make sure NestJS is running.
+          Cannot reach API. Make sure the Next.js server is running.
         </div>
       )}
 
